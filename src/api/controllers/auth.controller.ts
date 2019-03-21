@@ -71,11 +71,10 @@ exports.login = async (req: Request, res: Response, next: NextFunction) => {
  */
 exports.oAuth = async (req: any, res: Response, next: NextFunction) => {
   try {
-    const { user } = req;
-    const accessToken = user.token();
-    const token = generateTokenResponse(user, accessToken);
-    const userTransformed = user.transform();
-    return res.json({ token, user: userTransformed });
+
+    const aT = req.headers.authorization;
+    const { user, accessToken } = await User.findUserwithAccessToken(aT);
+    return res.json({ accessToken, user: user });
   } catch (error) {
     return next(error);
   }

@@ -27,3 +27,22 @@ export function listData(context: any, query: any, allowedFields: string[]) {
     .exec();
   return queryPromise(result);
 }
+
+
+
+// list data with pagination support
+// return a promise for chaining. (e.g. list then transform)
+export function listDataOrderWithPopulate(context: any, query: any, allowedFields: string[]) {
+  const queryObj = getQuery(query, allowedFields); // allowed filter fields
+  const { page = 1, perPage = 30, limit, offset, sort } = getPageQuery(query);
+
+  const result = context
+    .find(queryObj)
+    .populate('customer_id', ['id','email'])
+    .populate('productIDs')
+    .sort(sort)
+    .skip(typeof offset !== 'undefined' ? offset : perPage * (page - 1))
+    .limit(typeof limit !== 'undefined' ? limit : perPage)
+    .exec();
+  return queryPromise(result);
+}

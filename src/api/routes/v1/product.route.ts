@@ -1,9 +1,9 @@
 export {};
 const express = require('express');
 const validate = require('express-validation');
-const controller = require('../../controllers/user.controller');
+const controller = require('../../controllers/product.controller');
 const { authorize, ADMIN, LOGGED_USER } = require('../../middlewares/auth');
-const { listUsers, createUser, replaceUser, updateUser } = require('../../validations/user.validation');
+// const { listProducts, createProduct, replaceProduct, updateProduct } = require('../../validations/product.validation');
 
 const router = express.Router();
 
@@ -35,7 +35,7 @@ router
    * @apiError (Unauthorized 401)  Unauthorized  Only authenticated users can access the data
    * @apiError (Forbidden 403)     Forbidden     Only admins can access the data
    */
-  .get(authorize(ADMIN), validate(listUsers), controller.list)
+  .get(authorize(ADMIN), controller.list)
   /**
    * @api {post} v1/users Create User
    * @apiDescription Create a new user
@@ -61,32 +61,10 @@ router
    * @apiError (Unauthorized 401)  Unauthorized     Only authenticated users can create the data
    * @apiError (Forbidden 403)     Forbidden        Only admins can create the data
    */
-  .post(authorize(ADMIN), validate(createUser), controller.create);
+  .post(authorize(ADMIN), controller.create);
 
 router
-  .route('/profile')
-  /**
-   * @api {get} v1/users/profile User Profile
-   * @apiDescription Get logged in user profile information
-   * @apiVersion 1.0.0
-   * @apiName UserProfile
-   * @apiGroup User
-   * @apiPermission user
-   *
-   * @apiHeader {String} Athorization  User's access token
-   *
-   * @apiSuccess {String}  id         User's id
-   * @apiSuccess {String}  name       User's name
-   * @apiSuccess {String}  email      User's email
-   * @apiSuccess {String}  role       User's role
-   * @apiSuccess {Date}    createdAt  Timestamp
-   *
-   * @apiError (Unauthorized 401)  Unauthorized  Only authenticated Users can access the data
-   */
-  .get(authorize(), controller.loggedIn);
-
-router
-  .route('/:userId')
+  .route('/:productId')
   /**
    * @api {get} v1/users/:id Get User
    * @apiDescription Get user information
@@ -135,7 +113,7 @@ router
    * @apiError (Forbidden 403)    Forbidden    Only user with same id or admins can modify the data
    * @apiError (Not Found 404)    NotFound     User does not exist
    */
-  .put(authorize(LOGGED_USER), validate(replaceUser), controller.replace)
+  .put(authorize(LOGGED_USER), controller.replace)
   /**
    * @api {patch} v1/users/:id Update User
    * @apiDescription Update some fields of a user document
@@ -163,7 +141,7 @@ router
    * @apiError (Forbidden 403)    Forbidden    Only user with same id or admins can modify the data
    * @apiError (Not Found 404)    NotFound     User does not exist
    */
-  .patch(authorize(LOGGED_USER), validate(updateUser), controller.update)
+  .patch(authorize(LOGGED_USER), controller.update)
   /**
    * @api {patch} v1/users/:id Delete User
    * @apiDescription Delete a user
@@ -177,12 +155,12 @@ router
    * @apiSuccess (No Content 204)  Successfully deleted
    *
    * @apiError (Unauthorized 401) Unauthorized  Only authenticated users can delete the data
+   * @apiError (Unauthorized 401) Unauthorized  Only authenticated users can delete the data
    * @apiError (Forbidden 403)    Forbidden     Only user with same id or admins can delete the data
    * @apiError (Not Found 404)    NotFound      User does not exist
    */
-  .delete(authorize(LOGGED_USER), controller.remove);
+  // .delete(authorize(LOGGED_USER), controller.remove);
 
-router.route('/:userId/notes').get(authorize(LOGGED_USER), controller.listUserNotes);
-router.route('/:userId/notes/:noteId').delete(authorize(LOGGED_USER), controller.deleteUserNote);
+
 
 module.exports = router;

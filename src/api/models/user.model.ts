@@ -56,16 +56,24 @@ const userSchema = new mongoose.Schema(
       enum: roles,
       default: 'user'
     },
-    picture: {
+    avatar: {
       type: String,
       trim: true
+    },
+    create_at: {
+       type: Date,
+       default: Date.now
+    },
+    updated_at: {
+       type: Date,
+       default: Date.now
     }
   },
   {
     timestamps: true
   }
 );
-const ALLOWED_FIELDS = ['id', 'name', 'email', 'picture', 'role', 'createdAt'];
+const ALLOWED_FIELDS = ['id', 'name', 'email', 'avatar', 'role', 'create_at', 'updated_at'];
 
 /**
  * Add your
