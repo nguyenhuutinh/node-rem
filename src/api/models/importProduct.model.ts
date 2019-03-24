@@ -19,7 +19,7 @@ const dvt = ['kg', 'hop','goi'];
  * Product Schema
  * @private
  */
-const productSchema = new mongoose.Schema(
+const importProductSchema = new mongoose.Schema(
   {
     _id: mongoose.Schema.Types.ObjectId,
 
@@ -73,7 +73,7 @@ const ALLOWED_FIELDS = ['id', 'prd_code', 'name', 'image', 'dvt', 'note', 'creat
  * - validations
  * - virtuals
  */
-productSchema.pre('save', async function save(next: NextFunction) {
+importProductSchema.pre('save', async function save(next: NextFunction) {
   try {
     return next(); // normal save
   } catch (error) {
@@ -84,7 +84,7 @@ productSchema.pre('save', async function save(next: NextFunction) {
 /**
  * Methods
  */
-productSchema.method({
+importProductSchema.method({
   // query is optional, e.g. to transform data for response but only include certain "fields"
   transform({ query = {} }: { query?: any } = {}) {
     // transform every record (only respond allowed fields and "&fields=" in query)
@@ -110,7 +110,7 @@ productSchema.method({
 /**
  * Statics
  */
-productSchema.statics = {
+importProductSchema.statics = {
   dvt,
 
   /**
@@ -209,6 +209,6 @@ productSchema.statics = {
 /**
  * @typedef Product
  */
-const Product = mongoose.model('Product', productSchema);
-Product.ALLOWED_FIELDS = ALLOWED_FIELDS;
-module.exports = Product;
+const ImportProduct = mongoose.model('ImportProduct', importProductSchema);
+ImportProduct.ALLOWED_FIELDS = ALLOWED_FIELDS;
+module.exports = ImportProduct;

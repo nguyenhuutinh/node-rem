@@ -4,7 +4,10 @@ const passport = require('passport');
 import { User } from 'api/models';
 const APIError = require('../utils/APIError');
 
-const ADMIN = 'admin';
+const ADMIN_SUPER = 'admin_super';
+const ADMIN_IMPORT = 'admin_import';
+const ADMIN_OP = 'admin_op';
+
 const LOGGED_USER = '_loggedUser';
 
 import * as Bluebird from 'bluebird';
@@ -29,9 +32,10 @@ const handleJWT = (req: any, res: any, next: any, roles: any) => async (err: any
   } catch (e) {
     return next(apiError);
   }
+ console.log(roles)
+  if (roles.includes(LOGGED_USER)) {
 
-  if (roles === LOGGED_USER) {
-    if (user.role !== 'admin' && req.params.userId !== user._id.toString()) {
+    if (user.role.startsWith( 'admin') == false && req.params.userId !== user._id.toString()) {
       apiError.status = httpStatus.FORBIDDEN;
       apiError.message = 'Forbidden';
       return next(apiError);
@@ -50,10 +54,17 @@ const handleJWT = (req: any, res: any, next: any, roles: any) => async (err: any
   return next();
 };
 
-exports.ADMIN = ADMIN;
+exports.ADMIN_SUPER = ADMIN_SUPER;
+exports.ADMIN_OP = ADMIN_OP;
+exports.ADMIN_IMPORT = ADMIN_IMPORT;
+
 exports.LOGGED_USER = LOGGED_USER;
 
-exports.authorize = (roles = User.roles) => (req: any, res: any, next: any) =>
-  passport.authenticate('jwt', { session: false }, handleJWT(req, res, next, roles))(req, res, next);
+exports.authorize = (roles = User.roles) => (req: any, res: any, next: any) =>{
+  console.log(roles)
+  // console.log(req)
+  return passport.authenticate('jwt', { session: false }, handleJWT(req, res, next, roles))(req, res, next);
+}
+
 
 exports.oAuth = (service: any) => passport.authenticate(service, { session: false });

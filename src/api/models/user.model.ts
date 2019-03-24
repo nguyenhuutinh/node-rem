@@ -13,7 +13,7 @@ const { env, JWT_SECRET, JWT_EXPIRATION_MINUTES } = require('config/vars');
 /**
  * User Roles
  */
-const roles = ['user', 'admin'];
+const roles = ['user_customer', 'admin_import','admin_op', 'admin_super'];
 
 /**
  * User Schema
@@ -47,6 +47,17 @@ const userSchema = new mongoose.Schema(
       index: true,
       trim: true
     },
+    phone: {
+      unique: true,
+      type: String,
+      maxlength: 15,
+      required: true,
+      index: true,
+      trim: true
+    },
+    address: {
+      type: String,
+    },
     services: {
       facebook: String,
       google: String
@@ -54,7 +65,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
       enum: roles,
-      default: 'user'
+      default: 'user_customer'
     },
     avatar: {
       type: String,
@@ -73,7 +84,7 @@ const userSchema = new mongoose.Schema(
     timestamps: true
   }
 );
-const ALLOWED_FIELDS = ['id', 'name', 'email', 'avatar', 'role', 'create_at', 'updated_at'];
+const ALLOWED_FIELDS = ['id', 'name', 'phone', 'email', 'address', 'avatar', 'role', 'create_at', 'updated_at'];
 
 /**
  * Add your

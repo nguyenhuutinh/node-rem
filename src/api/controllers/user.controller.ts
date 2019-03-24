@@ -58,7 +58,7 @@ exports.replace = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { user } = req.route.meta;
     const newUser = new User(req.body);
-    const ommitRole = user.role !== 'admin' ? 'role' : '';
+    const ommitRole = !user.role.startsWith('admin') ? 'role' : '';
     const newUserObject = omit(newUser.toObject(), '_id', ommitRole);
 
     await user.update(newUserObject, { override: true, upsert: true });
@@ -75,7 +75,7 @@ exports.replace = async (req: Request, res: Response, next: NextFunction) => {
  * @public
  */
 exports.update = (req: Request, res: Response, next: NextFunction) => {
-  const ommitRole = req.route.meta.user.role !== 'admin' ? 'role' : '';
+  const ommitRole = req.route.meta.user.role.startsWith('admin') ? 'role' : '';
   const updatedUser = omit(req.body, ommitRole);
   const user = Object.assign(req.route.meta.user, updatedUser);
 
@@ -92,6 +92,7 @@ exports.update = (req: Request, res: Response, next: NextFunction) => {
  */
 exports.list = async (req: Request, res: Response, next: NextFunction) => {
   try {
+
     startTimer(req);
     const data = (await User.list(req)).transform(req);
     apiJson({ req, res, data, model: User });

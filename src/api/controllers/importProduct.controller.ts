@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 const httpStatus = require('http-status');
 const { omit } = require('lodash');
-import { Product } from 'api/models';
+import { ImportProduct } from 'api/models';
 import { startTimer, apiJson } from 'api/utils/Utils';
 const { handler: errorHandler } = require('../middlewares/error');
 
@@ -14,7 +14,7 @@ const { handler: errorHandler } = require('../middlewares/error');
  */
 exports.load = async (req: Request, res: Response, next: NextFunction, id: any) => {
   try {
-    const product = await Product.get(id);
+    const product = await ImportProduct.get(id);
     req.route.meta = req.route.meta || {};
     req.route.meta.product = product;
     return next();
@@ -37,12 +37,12 @@ exports.get = (req: Request, res: Response) => {
  */
 exports.create = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const product = new Product(req.body);
+    const product = new ImportProduct(req.body);
     const savedProduct = await product.save();
     res.status(httpStatus.CREATED);
     res.json(savedProduct.transform());
   } catch (error) {
-    next(Product.checkDuplicateProduct(error));
+    next(ImportProduct.checkDuplicateProduct(error));
   }
 };
 
@@ -53,16 +53,16 @@ exports.create = async (req: Request, res: Response, next: NextFunction) => {
 exports.replace = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { product } = req.route.meta;
-    const newProduct = new Product(req.body);
+    const newProduct = new ImportProduct(req.body);
     const ommitRole = product.role !== 'admin' ? 'role' : '';
     const newProductObject = omit(newProduct.toObject(), '_id', ommitRole);
 
     await product.update(newProductObject, { override: true, upsert: true });
-    const savedProduct = await Product.findById(product._id);
+    const savedProduct = await ImportProduct.findById(product._id);
 
     res.json(savedProduct.transform());
   } catch (error) {
-    next(Product.checkDuplicateProduct(error));
+    next(ImportProduct.checkDuplicateProduct(error));
   }
 };
 
@@ -78,7 +78,7 @@ exports.update = (req: Request, res: Response, next: NextFunction) => {
   product
     .save()
     .then((savedProduct: any) => res.json(savedProduct.transform()))
-    .catch((e: any) => next(Product.checkDuplicateProduct(e)));
+    .catch((e: any) => next(ImportProduct.checkDuplicateProduct(e)));
 };
 
 /**
@@ -89,8 +89,8 @@ exports.update = (req: Request, res: Response, next: NextFunction) => {
 exports.list = async (req: Request, res: Response, next: NextFunction) => {
   try {
     startTimer(req);
-    const data = (await Product.list(req)).transform(req);
-    apiJson({ req, res, data, model: Product });
+    const data = (await ImportProduct.list(req)).transform(req);
+    apiJson({ req, res, data, model: ImportProduct });
   } catch (e) {
     next(e);
   }

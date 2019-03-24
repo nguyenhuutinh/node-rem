@@ -1,8 +1,8 @@
 export {};
 const express = require('express');
 const validate = require('express-validation');
-const controller = require('../../controllers/product.controller');
-const { authorize, ADMIN, LOGGED_USER } = require('../../middlewares/auth');
+const controller = require('../../controllers/importProduct.controller');
+const { authorize, ADMIN_IMPORT, ADMIN_SUPER, LOGGED_USER } = require('../../middlewares/auth');
 // const { listProducts, createProduct, replaceProduct, updateProduct } = require('../../validations/product.validation');
 
 const router = express.Router();
@@ -35,7 +35,7 @@ router
    * @apiError (Unauthorized 401)  Unauthorized  Only authenticated users can access the data
    * @apiError (Forbidden 403)     Forbidden     Only admins can access the data
    */
-  .get(authorize(ADMIN), controller.list)
+  .get(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.list)
   /**
    * @api {post} v1/users Create User
    * @apiDescription Create a new user
@@ -61,7 +61,7 @@ router
    * @apiError (Unauthorized 401)  Unauthorized     Only authenticated users can create the data
    * @apiError (Forbidden 403)     Forbidden        Only admins can create the data
    */
-  .post(authorize(ADMIN), controller.create);
+  .post(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.create);
 
 router
   .route('/:productId')
@@ -85,7 +85,7 @@ router
    * @apiError (Forbidden 403)    Forbidden    Only user with same id or admins can access the data
    * @apiError (Not Found 404)    NotFound     User does not exist
    */
-  .get(authorize(LOGGED_USER), controller.get)
+  .get(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.get)
   /**
    * @api {put} v1/users/:id Replace User
    * @apiDescription Replace the whole user document with a new one
@@ -113,7 +113,7 @@ router
    * @apiError (Forbidden 403)    Forbidden    Only user with same id or admins can modify the data
    * @apiError (Not Found 404)    NotFound     User does not exist
    */
-  .put(authorize(LOGGED_USER), controller.replace)
+  .put(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.replace)
   /**
    * @api {patch} v1/users/:id Update User
    * @apiDescription Update some fields of a user document
@@ -141,7 +141,7 @@ router
    * @apiError (Forbidden 403)    Forbidden    Only user with same id or admins can modify the data
    * @apiError (Not Found 404)    NotFound     User does not exist
    */
-  .patch(authorize(LOGGED_USER), controller.update)
+  .patch(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.update)
   /**
    * @api {patch} v1/users/:id Delete User
    * @apiDescription Delete a user
