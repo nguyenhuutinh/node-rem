@@ -34,10 +34,10 @@ server.listen(port, () => {
   console.log(`${mstime.end('app-start').last} ms`);
 });
 
-if (env === 'development') {
+// if (env === '') {
   // initialize test data once (admin@example.com)
   require('./api/utils/InitData');
-}
+// }
 
 /**
  * Exports express
