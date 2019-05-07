@@ -54,6 +54,7 @@ exports.register = async (req: Request, res: Response, next: NextFunction) => {
  */
 exports.login = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    console.log("request.body", req.body)
     const { user, accessToken } = await User.findAndGenerateToken(req.body);
     const token = generateTokenResponse(user, accessToken);
     const userTransformed = user.transform();

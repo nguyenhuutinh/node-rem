@@ -32,7 +32,7 @@ const handleJWT = (req: any, res: any, next: any, roles: any) => async (err: any
   } catch (e) {
     return next(apiError);
   }
- console.log(roles)
+ console.log("35 roles ",roles)
   if (roles.includes(LOGGED_USER)) {
 
     if (user.role.startsWith( 'admin') == false && req.params.userId !== user._id.toString()) {
@@ -61,7 +61,7 @@ exports.ADMIN_IMPORT = ADMIN_IMPORT;
 exports.LOGGED_USER = LOGGED_USER;
 
 exports.authorize = (roles = User.roles) => (req: any, res: any, next: any) =>{
-  console.log(roles)
+  console.log("64 roles ",roles)
   // console.log(req)
   return passport.authenticate('jwt', { session: false }, handleJWT(req, res, next, roles))(req, res, next);
 }
