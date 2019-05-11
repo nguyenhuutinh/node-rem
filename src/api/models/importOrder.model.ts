@@ -183,11 +183,12 @@ importOrderSchema.statics = {
     return error;
   },
 
-  async updateOrderProducts({ id, productIds }: any) {
+  async updateOrderProducts({ id, productIDs }: any) {
+    console.log("updateOrderProducts" , productIDs)
     const order = await this.findById(id);
     if (order) {
-      if (!order.productIds) {
-        order.productIds = productIds;
+      if (productIDs) {
+        order.productIDs = productIDs;
       }
       return order.save();
     } else {
@@ -209,7 +210,7 @@ importOrderSchema.statics = {
     email,
     cc_email,
     note,
-    productIds
+    productIDs
   }: any) {
     console.log('createOrder');
     const customer = await User.findById(customer_id);
@@ -220,7 +221,7 @@ importOrderSchema.statics = {
       });
     }
 
-    const product = await ImportProduct.findById(productIds);
+    const product = await ImportProduct.findById(productIDs);
     // if(product == null){
     //    throw new APIError({
     //     message: 'product does not exist',
@@ -265,7 +266,7 @@ importOrderSchema.statics = {
       email,
       cc_email,
       note,
-      productIds
+      productIDs
     });
   },
   async updateOrder({
@@ -280,7 +281,7 @@ importOrderSchema.statics = {
     email,
     cc_email,
     note,
-    productIds
+    productIDs
   }: any) {
     console.log('updateOrder');
     const customer = await User.findById(customer_id);
@@ -291,7 +292,7 @@ importOrderSchema.statics = {
       });
     }
 
-    const product = await ImportProduct.findById(productIds);
+    const product = await ImportProduct.findById(productIDs);
     // if(product == null){
     //    throw new APIError({
     //     message: 'product does not exist',
@@ -315,8 +316,8 @@ importOrderSchema.statics = {
         order.note = note;
       }
 
-      if (!order.productIds) {
-        order.productIds = productIds;
+      if (!order.productIDs) {
+        order.productIDs = productIDs;
       }
       return order.save();
     }
