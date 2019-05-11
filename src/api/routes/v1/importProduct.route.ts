@@ -61,8 +61,8 @@ router
    * @apiError (Unauthorized 401)  Unauthorized     Only authenticated users can create the data
    * @apiError (Forbidden 403)     Forbidden        Only admins can create the data
    */
-  .post(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.create);
-
+  .post(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.create)
+  .delete(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.remove);
 router
   .route('/:productId')
   /**
@@ -159,7 +159,11 @@ router
    * @apiError (Forbidden 403)    Forbidden     Only user with same id or admins can delete the data
    * @apiError (Not Found 404)    NotFound      User does not exist
    */
-  // .delete(authorize(LOGGED_USER), controller.remove);
+
+  .post(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.create)
+
+
+
 
 
 

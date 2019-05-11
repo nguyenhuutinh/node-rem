@@ -1,4 +1,4 @@
-export {};
+export { };
 import { NextFunction, Request, Response, Router } from 'express';
 const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
@@ -9,7 +9,7 @@ import { startTimer, apiJson } from 'api/utils/Utils';
 const { handler: errorHandler } = require('../middlewares/error');
 
 /**
- * Load user and append to req.
+ * Load product and append to req.
  * @public
  */
 exports.load = async (req: Request, res: Response, next: NextFunction, id: any) => {
@@ -24,20 +24,21 @@ exports.load = async (req: Request, res: Response, next: NextFunction, id: any) 
 };
 
 /**
- * Get user
+ * Get products
  * @public
  */
 exports.get = (req: Request, res: Response) => {
   res.json(req.route.meta.product.transform());
-}
+};
 
 /**
- * Create new user
+ * Create new product
  * @public
  */
 exports.create = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const product = new ImportProduct(req.body);
+    product._id = new mongoose.Types.ObjectId();
     const savedProduct = await product.save();
     res.status(httpStatus.CREATED);
     res.json(savedProduct.transform());
@@ -82,7 +83,7 @@ exports.update = (req: Request, res: Response, next: NextFunction) => {
 };
 
 /**
- * Get user list
+ * Get products list
  * @public
  * @example GET https://localhost:3009/v1/users?role=admin&limit=5&offset=0&sort=email:desc,createdAt
  */
@@ -94,4 +95,19 @@ exports.list = async (req: Request, res: Response, next: NextFunction) => {
   } catch (e) {
     next(e);
   }
+};
+
+
+/**
+ * Delete product
+ * @public
+ */
+exports.remove = (req: Request, res: Response, next: NextFunction) => {
+
+  const product  = ImportProduct.findById(req.body.id);
+console.log("aaa",product)
+  product
+    .remove()
+    .then(() => res.status(httpStatus.NO_CONTENT).end())
+    .catch((e: any) => next(e));
 };

@@ -35,7 +35,7 @@ exports.get = (req: Request, res: Response) => res.json(req.route.meta.order.tra
  */
 exports.create = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    const order = new ImportOrder(req.body);
+    const order = await ImportOrder.createOrder(req.body);
     const savedOrder = await order.save();
     res.status(httpStatus.CREATED);
     res.json(savedOrder.transform());
@@ -65,13 +65,30 @@ exports.replace = async (req: Request, res: Response, next: NextFunction) => {
 };
 
 /**
- * Update existing user
+ * Update existing order
  * @public
  */
 exports.update = (req: Request, res: Response, next: NextFunction) => {
   const ommitRole = req.route.meta.user.role !== 'admin' ? 'role' : '';
   const updatedOrder = omit(req.body, ommitRole);
   const order = Object.assign(req.route.meta.order, updatedOrder);
+
+  order
+    .save()
+    .then((savedOrder: any) => res.json(savedOrder.transform()))
+    .catch((e: any) => next(ImportOrder.checkDuplicateOrder(e)));
+};
+
+/**
+ * Update existing products of order
+ * @public
+ */
+exports.updateProduct = async (req: Request, res: Response, next: NextFunction) => {
+  const ommitRole = req.route.meta.user.role !== 'admin' ? 'role' : '';
+  console.log(ommitRole)
+  // const updatedOrder = omit(req.body, ommitRole);
+  // const order = Object.assign(req.route.meta.order, updatedOrder);
+  const order  = await ImportOrder.updateOrderProducts(req.body)
 
   order
     .save()
@@ -94,4 +111,18 @@ exports.list = async (req: Request, res: Response, next: NextFunction) => {
   } catch (e) {
     next(e);
   }
+};
+
+
+/**
+ * Delete product
+ * @public
+ */
+exports.remove = (req: Request, res: Response, next: NextFunction) => {
+
+  const order  = ImportOrder.findById(req.body.id);
+  order
+    .remove()
+    .then(() => res.status(httpStatus.NO_CONTENT).end())
+    .catch((e: any) => next(e));
 };

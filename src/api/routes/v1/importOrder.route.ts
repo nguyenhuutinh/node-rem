@@ -61,7 +61,8 @@ router
    * @apiError (Unauthorized 401)  Unauthorized     Only authenticated users can create the data
    * @apiError (Forbidden 403)     Forbidden        Only admins can create the data
    */
-  .post(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.create);
+  .post(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.create)
+  .delete(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.remove);
 
 router
   .route('/:orderId')
@@ -141,25 +142,27 @@ router
    * @apiError (Forbidden 403)    Forbidden    Only user with same id or admins can modify the data
    * @apiError (Not Found 404)    NotFound     User does not exist
    */
-  .patch(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.update)
-  /**
-   * @api {patch} v1/users/:id Delete User
-   * @apiDescription Delete a user
-   * @apiVersion 1.0.0
-   * @apiName DeleteUser
-   * @apiGroup User
-   * @apiPermission user
-   *
-   * @apiHeader {String} Athorization  User's access token
-   *
-   * @apiSuccess (No Content 204)  Successfully deleted
-   *
-   * @apiError (Unauthorized 401) Unauthorized  Only authenticated users can delete the data
-   * @apiError (Forbidden 403)    Forbidden     Only user with same id or admins can delete the data
-   * @apiError (Not Found 404)    NotFound      User does not exist
-   */
-  // .delete(authorize(LOGGED_USER), controller.remove);
+  .patch(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.update);
+/**
+ * @api {patch} v1/users/:id Delete User
+ * @apiDescription Delete a user
+ * @apiVersion 1.0.0
+ * @apiName DeleteUser
+ * @apiGroup User
+ * @apiPermission user
+ *
+ * @apiHeader {String} Athorization  User's access token
+ *
+ * @apiSuccess (No Content 204)  Successfully deleted
+ *
+ * @apiError (Unauthorized 401) Unauthorized  Only authenticated users can delete the data
+ * @apiError (Forbidden 403)    Forbidden     Only user with same id or admins can delete the data
+ * @apiError (Not Found 404)    NotFound      User does not exist
+ */
+// .delete(authorize(LOGGED_USER), controller.remove);
 
-
+router
+  .route('/:orderId/products')
+  .put(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.updateProduct)
 
 module.exports = router;

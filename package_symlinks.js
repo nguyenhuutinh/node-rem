@@ -21,7 +21,7 @@ for (let i = 0; i < arr.length; i += 1) {
       fs.symlinkSync(srcpath, dstpath, 'dir');
     } catch (ex) {
       console.error(`Creating symbolic link failed, consider Administrator mode on Windows: `);
-      console.error(ex);
+      console.error("error", ex);
       break;
     }
   }
