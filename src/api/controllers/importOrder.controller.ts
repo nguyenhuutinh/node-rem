@@ -89,7 +89,7 @@ exports.updateProduct = async (req: Request, res: Response, next: NextFunction) 
   // const updatedOrder = omit(req.body, ommitRole);
   // const order = Object.assign(req.route.meta.order, updatedOrder);
   const order  = await ImportOrder.updateOrderProducts(req.body)
-  console.log("order",order)
+  console.log("order",order);
   order
     .save()
     .then((savedOrder: any) => res.json(savedOrder.transform()))

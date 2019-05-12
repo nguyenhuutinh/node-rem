@@ -184,8 +184,9 @@ importOrderSchema.statics = {
   },
 
   async updateOrderProducts({ id, productIDs }: any) {
-    console.log("updateOrderProducts" , productIDs)
+    console.log("updateOrderProducts" , id ,productIDs)
     const order = await this.findById(id);
+      console.log("order1" , order)
     if (order) {
       if (productIDs) {
         order.productIDs = productIDs;
