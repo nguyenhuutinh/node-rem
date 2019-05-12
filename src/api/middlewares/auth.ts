@@ -61,7 +61,7 @@ exports.ADMIN_IMPORT = ADMIN_IMPORT;
 exports.LOGGED_USER = LOGGED_USER;
 
 exports.authorize = (roles = User.roles) => (req: any, res: any, next: any) =>{
-  console.log("64 roles ",roles)
+  console.log("64 roles",roles)
   // console.log(req)
   return passport.authenticate('jwt', { session: false }, handleJWT(req, res, next, roles))(req, res, next);
 }
