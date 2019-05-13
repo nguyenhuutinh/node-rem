@@ -7,8 +7,8 @@ const moment = require('moment-timezone');
 const jwt = require('jwt-simple');
 const uuidv4 = require('uuid/v4');
 const APIError = require('api/utils/APIError');
-import { ImportProduct, User } from 'api/models';
-import { transformData, listData } from 'api/utils/ModelUtils';
+import { ImportProduct, User , ProductQuantity} from 'api/models';
+import { transformData, listOrderData } from 'api/utils/ModelUtils';
 const { env, JWT_SECRET, JWT_EXPIRATION_MINUTES } = require('config/vars');
 
 /**
@@ -26,6 +26,10 @@ const importOrderSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    order_email: {
+      type: String,
+      trim: true
+    },
     customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
 
     delivery_address: {
@@ -36,6 +40,10 @@ const importOrderSchema = new mongoose.Schema(
     delivery_time: {
       type: Date,
       default: Date.now
+    },
+    delivery_time_str: {
+      type: String,
+      trim: true
     },
     sale_force: {
       type: String,
@@ -58,7 +66,7 @@ const importOrderSchema = new mongoose.Schema(
       trim: true
     },
 
-    productIDs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ImportProduct' }],
+    productIDs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ProductQuantity' }],
 
     created_at: {
       type: Date,
@@ -77,9 +85,11 @@ const ALLOWED_FIELDS = [
   'id',
   'order_code',
   'order_name',
+  'order_email',
   'customer',
   'delivery_address',
   'delivery_time',
+  'delivery_time_str',
   'sale_force',
   'hotline_deli',
   'email',
@@ -132,10 +142,10 @@ importOrderSchema.statics = {
       if (mongoose.Types.ObjectId.isValid(id)) {
         order = await this.findById(id)
           .populate('customer', ['id', 'name', 'phone', 'email'])
-          .populate('productIDs')
+          .populate('productIDs', ['id', 'quantity', 'note'])
           .exec();
       }
-
+      console.log("order",order)
       if (order) {
         return order;
       }
@@ -154,7 +164,7 @@ importOrderSchema.statics = {
    * @returns {Promise<Product[]>}
    */
   list({ query }: { query: any }) {
-    return listData(this, query, ALLOWED_FIELDS);
+    return listOrderData(this, query, ALLOWED_FIELDS);
   },
 
   /**
@@ -183,10 +193,36 @@ importOrderSchema.statics = {
     return error;
   },
 
-  async updateOrderProducts({ id, productIDs }: any) {
-    console.log("updateOrderProducts" , id ,productIDs)
+  async updateOrderProductsQuatity({ id, products }: any) {
+
     const order = await this.findById(id);
-      console.log("order1" , order)
+    console.log("updateOrderProductsQuatity", order, products.length)
+    if (order) {
+      if (products) {
+        var orderProducts = []
+        for (var i = 0; i < products.length; i++) {
+          const product = await ImportProduct.findById(products[i].id);
+          console.log("products",products)
+          if (product) {
+            const order_product = await ProductQuantity.createOrderProduct({ order_id: id, product_id: products[i].id, quantity: products[i].quantity, note : products[i].note})
+            orderProducts.push(order_product.id);
+          }
+        }
+        console.log("orderProducts",orderProducts)
+        order.productIDs = orderProducts;
+      }
+      return order.save();
+    } else {
+      throw new APIError({
+        message: 'order not exist',
+        status: httpStatus.NOT_FOUND
+      });
+    }
+  },
+  async updateOrderProducts({ id, productIDs }: any) {
+    console.log("updateOrderProducts", id, productIDs)
+    const order = await this.findById(id);
+    console.log("order1", order)
     if (order) {
       if (productIDs) {
         order.productIDs = productIDs;
@@ -203,9 +239,11 @@ importOrderSchema.statics = {
     id,
     order_code,
     order_name,
+    order_email,
     customer_id,
     delivery_address,
     delivery_time,
+    delivery_time_str,
     sale_force,
     hotline_deli,
     email,
@@ -259,9 +297,87 @@ importOrderSchema.statics = {
       _id: new mongoose.Types.ObjectId(),
       order_code,
       order_name,
+      order_email,
       customer,
       delivery_address,
       delivery_time,
+      delivery_time_str,
+      sale_force,
+      hotline_deli,
+      email,
+      cc_email,
+      note,
+      productIDs
+    });
+  },
+
+  async createOrderForImport({
+    id,
+    order_code,
+    order_name,
+    order_email,
+    customer_name,
+    delivery_address,
+    delivery_time,
+    delivery_time_str,
+    sale_force,
+    hotline_deli,
+    email,
+    cc_email,
+    note,
+    productIDs
+  }: any) {
+    console.log('customer_name', customer_name);
+    const customer = await User.findOne({ name: { $eq: customer_name } });
+    if (customer == null) {
+      throw new APIError({
+        message: 'customer does not exist',
+        status: httpStatus.NOT_FOUND
+      });
+    }
+
+    const product = await ImportProduct.findById(productIDs);
+    // if(product == null){
+    //    throw new APIError({
+    //     message: 'product does not exist',
+    //     status: httpStatus.NOT_FOUND
+    //   });
+    //
+    // }
+    const order = await this.findOne({ order_code: { $eq: order_code } });
+    if (order) {
+      throw new APIError({
+        message: 'order code exist',
+        status: httpStatus.FORBIDDEN
+      });
+      // if (!order.customer) {
+      //   order.customer = customer;
+      // }
+      // if (!order.delivery_address) {
+      //   order.delivery_address = delivery_address;
+      // }
+      // if (!order.delivery_time) {
+      //   order.delivery_time = delivery_time;
+      // }
+      // if (!order.note) {
+      //   order.note = note;
+      // }
+      //
+      // if (!order.productIds) {
+      //   order.productIds = productIds;
+      // }
+      // return order.save();
+    }
+
+    return this.create({
+      _id: new mongoose.Types.ObjectId(),
+      order_code,
+      order_name,
+      order_email,
+      customer,
+      delivery_address,
+      delivery_time,
+      delivery_time_str,
       sale_force,
       hotline_deli,
       email,
@@ -274,9 +390,11 @@ importOrderSchema.statics = {
     id,
     order_code,
     order_name,
+    order_email,
     customer_id,
     delivery_address,
     delivery_time,
+    delivery_time_str,
     sale_force,
     hotline_deli,
     email,
@@ -304,20 +422,32 @@ importOrderSchema.statics = {
     const order = await this.findOne({ order_code: { $eq: order_code } });
     if (order) {
 
-      if (!order.customer) {
+      if (customer) {
         order.customer = customer;
       }
-      if (!order.delivery_address) {
+      if (order_code) {
+        order.order_code = order_code;
+      }
+      if (order_name) {
+        order.order_name = order_name;
+      }
+      if (order_email) {
+        order.order_email = order_email;
+      }
+      if (delivery_address) {
         order.delivery_address = delivery_address;
       }
-      if (!order.delivery_time) {
+      if (delivery_time) {
         order.delivery_time = delivery_time;
       }
-      if (!order.note) {
+      if (delivery_time_str) {
+        order.delivery_time = delivery_time_str;
+      }
+      if (note) {
         order.note = note;
       }
 
-      if (!order.productIDs) {
+      if (productIDs) {
         order.productIDs = productIDs;
       }
       return order.save();

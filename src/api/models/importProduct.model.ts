@@ -175,8 +175,8 @@ importProductSchema.statics = {
   },
 
   async createProduct({prd_code, name, dvt, note, image }: any) {
-    // console.log("createProduct");
-    const product = await this.findOne(prd_code);
+    console.log("createProduct");
+    const product = await this.findOne({ prd_code: { $eq: prd_code } });
     if (product) {
 
       if (!product.name) {

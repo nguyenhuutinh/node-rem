@@ -4,6 +4,9 @@ import { NextFunction, Request, Response, Router } from 'express';
 const router = express.Router();
 const { authorize } = require('../../middlewares/auth');
 const { UPLOAD_LIMIT } = require('config/vars');
+const uuidv4 = require('uuid/v4');
+var path = require('path');
+
 
 const controller = require('../../controllers/upload.controller');
 
@@ -13,8 +16,8 @@ const storage = multer.diskStorage({
     cb(null, 'uploads/');
   },
   filename(req: Request, file: any, cb: any) {
-    // fieldname, originalname, mimetype
-    cb(null, `${file.fieldname}-${Date.now()}.png`);
+    // fieldname, originaln ame, mimetype
+    cb(null, uuidv4() + path.extname(file.originalname));
   }
 });
 const upload = multer({ storage, limits: { fieldSize: `${UPLOAD_LIMIT}MB` } });

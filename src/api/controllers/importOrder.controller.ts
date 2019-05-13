@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 const httpStatus = require('http-status');
 const { omit } = require('lodash');
-import { ImportOrder, User } from 'api/models';
+import { ImportOrder, User,ProductQuantity } from 'api/models';
 import { startTimer, apiJson } from 'api/utils/Utils';
 const { handler: errorHandler } = require('../middlewares/error');
 
@@ -89,7 +89,6 @@ exports.updateProduct = async (req: Request, res: Response, next: NextFunction) 
   // const updatedOrder = omit(req.body, ommitRole);
   // const order = Object.assign(req.route.meta.order, updatedOrder);
   const order  = await ImportOrder.updateOrderProducts(req.body)
-  console.log("order",order);
   order
     .save()
     .then((savedOrder: any) => res.json(savedOrder.transform()))

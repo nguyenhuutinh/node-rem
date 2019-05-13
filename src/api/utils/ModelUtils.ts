@@ -37,9 +37,9 @@ export function listOrderData(context: any, query: any, allowedFields: string[])
 
   const result = context
     .find(queryObj)
-    .populate('products')
+    // .populate('products')
     .populate('customer',['id','name','phone'])
-    .populate('delivery_time')
+    // .populate('delivery_time')
     .sort(sort)
     .skip(typeof offset !== 'undefined' ? offset : perPage * (page - 1))
     .limit(typeof limit !== 'undefined' ? limit : perPage)
