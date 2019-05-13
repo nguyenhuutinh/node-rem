@@ -22,7 +22,7 @@ exports.upload = async (req: any, res: Response, next: NextFunction) => {
     var sale_force = worksheet['B9'].v;
     var hotline_deli = worksheet['B10'].v;
     var email = worksheet['B11'].v;
-    var cc_email = worksheet['B12'].v + "," +   worksheet['B13'] ? worksheet['B13'].v : "";
+    var cc_email = worksheet['B12'].v + "," +   (worksheet['B13'] ? worksheet['B13'].v : "");
     var note = worksheet['B14'].v;
     var id  = new mongoose.Types.ObjectId()
     var delivery_time = new Date();
