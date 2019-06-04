@@ -24,4 +24,8 @@ const upload = multer({ storage, limits: { fieldSize: `${UPLOAD_LIMIT}MB` } });
 
 router.route('/file').post(authorize(), upload.single('file'), controller.upload);
 
+
+
+router.route('/file_2').post(authorize(), upload.single('file'), controller.upload2);
+
 module.exports = router;

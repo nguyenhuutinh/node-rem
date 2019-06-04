@@ -70,7 +70,7 @@ const saleOrderSchema = new mongoose.Schema(
     sale_force:{
       type:String
     },
-    products : [{ type: mongoose.Schema.Types.ObjectId, ref: 'ProductQuantity' }],
+    products : [{ type: mongoose.Schema.Types.ObjectId, ref: 'OrderProducts' }],
     delivery_time : [{ type: mongoose.Schema.Types.ObjectId, ref: 'PackageTimeLine' }],
 
     created_at: {

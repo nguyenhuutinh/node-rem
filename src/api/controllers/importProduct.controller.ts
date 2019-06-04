@@ -105,7 +105,7 @@ exports.list = async (req: Request, res: Response, next: NextFunction) => {
 exports.remove = (req: Request, res: Response, next: NextFunction) => {
 
   const product  = ImportProduct.findById(req.body.id);
-console.log("aaa",product)
+  console.log("remove product",product)
   product
     .remove()
     .then(() => res.status(httpStatus.NO_CONTENT).end())

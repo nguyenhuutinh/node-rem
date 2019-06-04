@@ -19,6 +19,8 @@ const dvt = ['kg', 'hop','goi'];
  * Product Schema
  * @private
  */
+ var SchemaTypes = mongoose.Schema.Types;
+
 const importProductSchema = new mongoose.Schema(
   {
     _id: mongoose.Schema.Types.ObjectId,
@@ -33,15 +35,27 @@ const importProductSchema = new mongoose.Schema(
     name: {
       type: String,
       maxlength: 128,
-      index: true,
       unique: true,
+      trim: true
+    },
+    en_name: {
+      type: String,
+      maxlength: 128,
+      trim: true
+    },
+
+    alias: {
+      type: String,
+      maxlength: 128,
       trim: true
     },
     dvt: {
       type: String,
       trim: true
     },
-
+    price:{
+      type: Number,
+    },
     note: {
       type: String,
       trim: true
@@ -65,7 +79,7 @@ const importProductSchema = new mongoose.Schema(
     timestamps: true
   }
 );
-const ALLOWED_FIELDS = ['id', 'prd_code', 'name', 'image', 'dvt', 'note', 'created_at', 'updated_at'];
+const ALLOWED_FIELDS = ['id', 'prd_code', 'name', 'image', 'dvt', "price", 'note'];
 
 /**
  * Add your
@@ -163,7 +177,7 @@ importProductSchema.statics = {
           {
             field: 'prd_code',
             location: 'body',
-            messages: ['"prd_code" already exists']
+            messages: ['"product" already exists']
           }
         ],
         status: httpStatus.CONFLICT,
@@ -174,7 +188,7 @@ importProductSchema.statics = {
     return error;
   },
 
-  async createProduct({prd_code, name, dvt, note, image }: any) {
+  async createProduct({prd_code, name, dvt, note, image, alias }: any) {
     console.log("createProduct");
     const product = await this.findOne({ prd_code: { $eq: prd_code } });
     if (product) {
@@ -195,6 +209,7 @@ importProductSchema.statics = {
       _id: new mongoose.Types.ObjectId(),
       prd_code,
       name,
+      alias,
       dvt,
       note,
       image

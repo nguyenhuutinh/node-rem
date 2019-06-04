@@ -9,6 +9,7 @@ const importProductRoutes = require('./importProduct.route');
 const saleProductRoutes = require('./saleProduct.route');
 const importOrderRoutes = require('./importOrder.route');
 const saleOrderRoutes = require('./saleOrder.route');
+const supplierRoutes = require('./supplier.route');
 
 const router = express.Router();
 
@@ -31,7 +32,7 @@ router.use('/import/orders', importOrderRoutes);
 router.use('/sale/orders', saleOrderRoutes);
 router.use('/sale/products', saleProductRoutes);
 router.use('/import/products', importProductRoutes);
-
+router.use('/supplier', supplierRoutes);
 router.use('/auth', authRoutes);
 router.use('/upload', uploadRoutes);
 

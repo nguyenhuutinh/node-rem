@@ -1,4 +1,4 @@
-export { };
+export {};
 import { NextFunction, Request, Response, Router } from 'express';
 const mongoose = require('mongoose');
 const httpStatus = require('http-status');
@@ -7,7 +7,7 @@ const moment = require('moment-timezone');
 const jwt = require('jwt-simple');
 const uuidv4 = require('uuid/v4');
 const APIError = require('api/utils/APIError');
-import { ImportProduct, User , ProductQuantity} from 'api/models';
+import { ImportProduct, User, OrderProducts, SupplierAccount } from 'api/models';
 import { transformData, listOrderData } from 'api/utils/ModelUtils';
 const { env, JWT_SECRET, JWT_EXPIRATION_MINUTES } = require('config/vars');
 
@@ -15,87 +15,51 @@ const { env, JWT_SECRET, JWT_EXPIRATION_MINUTES } = require('config/vars');
  * Product Schema
  * @private
  */
-const importOrderSchema = new mongoose.Schema(
-  {
-    _id: mongoose.Schema.Types.ObjectId,
-    order_code: {
-      type: String,
-      trim: true
-    },
-    order_name: {
-      type: String,
-      trim: true
-    },
-    order_email: {
-      type: String,
-      trim: true
-    },
-    customer: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-
-    delivery_address: {
-      type: String,
-      maxlength: 128,
-      trim: true
-    },
-    delivery_time: {
-      type: Date,
-      default: Date.now
-    },
-    delivery_time_str: {
-      type: String,
-      trim: true
-    },
-    sale_force: {
-      type: String,
-      trim: true
-    },
-    hotline_deli: {
-      type: String,
-      trim: true
-    },
-    email: {
-      type: String,
-      trim: true
-    },
-    cc_email: {
-      type: String,
-      trim: true
-    },
-    note: {
-      type: String,
-      trim: true
-    },
-
-    productIDs: [{ type: mongoose.Schema.Types.ObjectId, ref: 'ProductQuantity' }],
-
-    created_at: {
-      type: Date,
-      default: Date.now
-    },
-    updated_at: {
-      type: Date,
-      default: Date.now
-    }
+const importOrderSchema = new mongoose.Schema({
+  _id: mongoose.Schema.Types.ObjectId,
+  order_code: {
+    type: String,
+    trim: true
   },
-  {
-    timestamps: true
+  supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },
+  owner: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },
+  delivery_address: {
+    type: String
+  },
+  delivery_time: {
+    type: Date,
+    default: Date.now
+  },
+  delivery_time_str: {
+    type: String,
+    trim: true
+  },
+
+  note: {
+    type: String,
+    trim: true
+  },
+  productDetail: [{ type: mongoose.Schema.Types.ObjectId, ref: 'OrderProducts' }],
+
+  created_at: {
+    type: Date,
+    default: Date.now
+  },
+  updated_at: {
+    type: Date,
+    default: Date.now
   }
-);
+});
 const ALLOWED_FIELDS = [
   'id',
   'order_code',
-  'order_name',
-  'order_email',
-  'customer',
+  'supplier',
+  'owner',
   'delivery_address',
   'delivery_time',
   'delivery_time_str',
-  'sale_force',
-  'hotline_deli',
-  'email',
-  'cc_email',
   'note',
-  'productIDs',
+  'productDetail',
   'created_at',
   'updated_at'
 ];
@@ -138,18 +102,14 @@ importOrderSchema.statics = {
    */
   async get(id: any) {
     try {
-      let order;
       if (mongoose.Types.ObjectId.isValid(id)) {
-        order = await this.findById(id)
-          .populate('customer', ['id', 'name', 'phone', 'email'])
-          .populate('productIDs', ['id', 'quantity', 'note'])
+        const order = await this.findById(id)
+          .populate('supplier', ['id', 'name', 'phone', 'email'])
+          .populate('owner', ['id', 'name', 'phone', 'email'])
+          .populate('productDetail', ['id', 'quantity', 'price', 'note', 'alias'])
           .exec();
-      }
-      console.log("order",order)
-      if (order) {
         return order;
       }
-
       throw new APIError({
         message: 'order does not exist',
         status: httpStatus.NOT_FOUND
@@ -193,23 +153,67 @@ importOrderSchema.statics = {
     return error;
   },
 
-  async updateOrderProductsQuatity({ id, products }: any) {
+  async updateOrderProducts({order_id, product }: any) {
+    console.log('updateOrderProducts', order_id, product);
+    if (order_id == undefined) {
+      throw new APIError({
+        message: 'order_id not missing',
+        status: httpStatus.NOT_FOUND
+      });
+      return;
+    }
 
+    const order = await this.findById(order_id);
+
+    if (order) {
+      if (product) {
+        const order_product = await OrderProducts.createOrderProduct({
+          order_id: order_id,
+          product_id: product.id,
+          quantity: product.quantity,
+          alias: product.alias,
+          price: product.price,
+          note: product.note
+        });
+        return order_product;
+      } else {
+        throw new APIError({
+          message: 'product not exist',
+          status: httpStatus.NOT_FOUND
+        });
+      }
+    } else {
+      throw new APIError({
+        message: 'order not exist',
+        status: httpStatus.NOT_FOUND
+      });
+    }
+  },
+
+  async updateProductsOfOrder({ id, products }: any) {
+    console.log("updateProductsOfOrder",products)
     const order = await this.findById(id);
-    console.log("updateOrderProductsQuatity", order, products.length)
     if (order) {
       if (products) {
-        var orderProducts = []
+        var orderProducts = [];
         for (var i = 0; i < products.length; i++) {
-          const product = await ImportProduct.findById(products[i].id);
-          console.log("products",products)
-          if (product) {
-            const order_product = await ProductQuantity.createOrderProduct({ order_id: id, product_id: products[i].id, quantity: products[i].quantity, note : products[i].note})
-            orderProducts.push(order_product.id);
+          let product = await ImportProduct.findOne({ _id: { $eq: products[i].id } });
+          if (product && products[i].id) {
+            product.price = products[i].price;
+            product.alias = products[i].alias;
+            product.quantity = products[i].quantity;
+            const _orderPrds = await this.updateOrderProducts({ order_id: order.id, product: product });
+            // updated_order.save();
+            orderProducts.push(_orderPrds);
+          }else{
+            throw new APIError({
+              message: 'product not exist',
+              status: httpStatus.NOT_FOUND
+            });
           }
         }
-        console.log("orderProducts",orderProducts)
-        order.productIDs = orderProducts;
+        order.productDetail = orderProducts;
+        console.log('order productDetail', order);
       }
       return order.save();
     } else {
@@ -219,43 +223,23 @@ importOrderSchema.statics = {
       });
     }
   },
-  async updateOrderProducts({ id, productIDs }: any) {
-    console.log("updateOrderProducts", id, productIDs)
-    const order = await this.findById(id);
-    console.log("order1", order)
-    if (order) {
-      if (productIDs) {
-        order.productIDs = productIDs;
-      }
-      return order.save();
-    } else {
-      throw new APIError({
-        message: 'order not exist',
-        status: httpStatus.NOT_FOUND
-      });
-    }
-  },
+
   async createOrder({
     id,
     order_code,
-    order_name,
-    order_email,
-    customer_id,
+    owner_id,
+    supplier_id,
     delivery_address,
     delivery_time,
     delivery_time_str,
-    sale_force,
-    hotline_deli,
-    email,
-    cc_email,
     note,
     productIDs
   }: any) {
-    console.log('createOrder');
-    const customer = await User.findById(customer_id);
-    if (customer == null) {
+    console.log('createOrder', owner_id, supplier_id);
+    const _supplier = await SupplierAccount.findById(supplier_id);
+    if (_supplier == null) {
       throw new APIError({
-        message: 'customer does not exist',
+        message: 'supplier does not exist',
         status: httpStatus.NOT_FOUND
       });
     }
@@ -292,44 +276,34 @@ importOrderSchema.statics = {
       // }
       // return order.save();
     }
-
+    let supplier = _supplier._id;
+    var owner = owner_id;
     return this.create({
       _id: new mongoose.Types.ObjectId(),
       order_code,
-      order_name,
-      order_email,
-      customer,
+      supplier,
+      owner,
       delivery_address,
       delivery_time,
       delivery_time_str,
-      sale_force,
-      hotline_deli,
-      email,
-      cc_email,
-      note,
-      productIDs
+      note
     });
   },
 
   async createOrderForImport({
     id,
     order_code,
-    order_name,
-    order_email,
-    customer_name,
+    order_contact_id,
+    supplier_name,
     delivery_address,
     delivery_time,
     delivery_time_str,
-    sale_force,
-    hotline_deli,
-    email,
-    cc_email,
     note,
     productIDs
   }: any) {
-    console.log('customer_name', customer_name);
-    const customer = await User.findOne({ name: { $eq: customer_name } });
-    if (customer == null) {
+    console.log('supplier_name', supplier_name);
+    const _supplier = await SupplierAccount.findOne({ name: { $eq: supplier_name } });
+    if (_supplier == null) {
       throw new APIError({
         message: 'customer does not exist',
         status: httpStatus.NOT_FOUND
@@ -368,22 +342,17 @@ importOrderSchema.statics = {
       // }
       // return order.save();
     }
-
+    let supplier = _supplier._id;
+    var customer = order_contact_id;
     return this.create({
       _id: new mongoose.Types.ObjectId(),
       order_code,
-      order_name,
-      order_email,
+      supplier,
       customer,
       delivery_address,
       delivery_time,
       delivery_time_str,
-      sale_force,
-      hotline_deli,
-      email,
-      cc_email,
-      note,
-      productIDs
+      note
     });
   },
   async updateOrder({
@@ -421,7 +390,6 @@ importOrderSchema.statics = {
     // }
     const order = await this.findOne({ order_code: { $eq: order_code } });
     if (order) {
-
       if (customer) {
         order.customer = customer;
       }
@@ -447,13 +415,8 @@ importOrderSchema.statics = {
         order.note = note;
       }
 
-      if (productIDs) {
-        order.productIDs = productIDs;
-      }
       return order.save();
-    }
-
-    else {
+    } else {
       throw new APIError({
         message: 'order not exist',
         status: httpStatus.NOT_FOUND

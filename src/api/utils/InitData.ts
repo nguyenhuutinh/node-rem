@@ -1,15 +1,21 @@
 export {};
-import { User, UserNote, ImportProduct, SaleProduct, SaleOrder, ImportOrder, PackageTimeLine, ProductQuantity} from 'api/models';
+import { User, UserNote, ImportProduct, SaleProduct, SaleOrder, ImportOrder, PackageTimeLine, OrderProducts, SupplierAccount} from 'api/models';
 const mongoose = require('mongoose');
 
-// const IMPORT_PRODUCT_1 = {
-//   _id:new mongoose.Types.ObjectId,
-//   prd_code:'153169',
-//   name: 'LE DO VANG ( XX NAM PHI)',
-//   image: 'admin',
-//   dvt: 'kg',
-//   note:'CO THE LAY LE HAN QUOC'
-// };
+const SUPPLIER_1 = {
+  _id:new mongoose.Types.ObjectId,
+  name:'CONG TY TNHH THOUSANHANDS',
+  phone: '1900636791',
+  address: '416A Hai Ba Trung',
+  type: 'store',
+};
+const SUPPLIER_2 = {
+  _id:new mongoose.Types.ObjectId,
+  name:'CONG TY TNHH TINH NGUYEN',
+  phone: '1900636792',
+  address: '416A Hai Ba Trung',
+  type: 'supplier',
+};
 
 // const IMPORT_PRODUCT_2 = {
 //   _id:new mongoose.Types.ObjectId,
@@ -273,7 +279,10 @@ async function setup() {
   const superAdmin = new User(ADMIN_SUPER_USER_1);
   await superAdmin.save();
 
-
+  const supplier1 = new SupplierAccount(SUPPLIER_1);
+  await supplier1.save();
+  const supplier2 = new SupplierAccount(SUPPLIER_2);
+  await supplier2.save();
   // const importOrder1 = new ImportOrder({_id:new mongoose.Types.ObjectId,order_code:"import order1", customer: adminUser1._id, delivery_address:"13 lam son", delivery_time: new Date(), note:"", productIDs: [importProduct1._id,importProduct2._id]})
   // await importOrder1.save();
   //

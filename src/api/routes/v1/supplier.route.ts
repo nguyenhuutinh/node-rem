@@ -1,8 +1,8 @@
 export {};
 const express = require('express');
 const validate = require('express-validation');
-const controller = require('../../controllers/importOrder.controller');
-const { authorize, ADMIN_IMPORT, ADMIN_SUPER, LOGGED_USER } = require('../../middlewares/auth');
+const controller = require('../../controllers/supplier.controller');
+const { authorize, ADMIN_OP, ADMIN_SUPER, ADMIN_IMPORT, LOGGED_USER } = require('../../middlewares/auth');
 // const { listProducts, createProduct, replaceProduct, updateProduct } = require('../../validations/product.validation');
 
 const router = express.Router();
@@ -10,7 +10,7 @@ const router = express.Router();
 /**
  * Load user when API with userId route parameter is hit
  */
-router.param('orderId', controller.load);
+router.param('supplierId', controller.load);
 
 router
   .route('/')
@@ -35,7 +35,7 @@ router
    * @apiError (Unauthorized 401)  Unauthorized  Only authenticated users can access the data
    * @apiError (Forbidden 403)     Forbidden     Only admins can access the data
    */
-  .get(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.list)
+  .get(authorize([ADMIN_SUPER, ADMIN_OP, ADMIN_IMPORT]), controller.list)
   /**
    * @api {post} v1/orders Create User
    * @apiDescription Create a new user
@@ -61,13 +61,12 @@ router
    * @apiError (Unauthorized 401)  Unauthorized     Only authenticated users can create the data
    * @apiError (Forbidden 403)     Forbidden        Only admins can create the data
    */
-  .post(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.create)
-  .delete(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.remove);
-
+  .post(authorize([ADMIN_SUPER, ADMIN_OP, ADMIN_IMPORT]), controller.create)
+  .delete(authorize(ADMIN_SUPER, ADMIN_OP, ADMIN_IMPORT), controller.remove);
 router
-  .route('/:orderId')
+  .route('/:supplierId')
   /**
-   * @api {get} v1/orders/:id Get order
+   * @api {get} v1/suppliers/:id Get supplier
    * @apiDescription Get user information
    * @apiVersion 1.0.0
    * @apiName GetUser
@@ -86,7 +85,7 @@ router
    * @apiError (Forbidden 403)    Forbidden    Only user with same id or admins can access the data
    * @apiError (Not Found 404)    NotFound     User does not exist
    */
-  .get(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.get)
+  .get(authorize([ADMIN_SUPER, ADMIN_OP, ADMIN_IMPORT]), controller.get)
   /**
    * @api {put} v1/orders/:id Replace Order
    * @apiDescription Replace the whole user document with a new one
@@ -114,7 +113,7 @@ router
    * @apiError (Forbidden 403)    Forbidden    Only user with same id or admins can modify the data
    * @apiError (Not Found 404)    NotFound     User does not exist
    */
-  .put(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.replace)
+  .put(authorize([ADMIN_SUPER, ADMIN_OP, ADMIN_IMPORT]), controller.replace)
   /**
    * @api {patch} v1/users/:id Update User
    * @apiDescription Update some fields of a user document
@@ -142,31 +141,25 @@ router
    * @apiError (Forbidden 403)    Forbidden    Only user with same id or admins can modify the data
    * @apiError (Not Found 404)    NotFound     User does not exist
    */
-  .patch(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.update);
-/**
- * @api {patch} v1/users/:id Delete User
- * @apiDescription Delete a user
- * @apiVersion 1.0.0
- * @apiName DeleteUser
- * @apiGroup User
- * @apiPermission user
- *
- * @apiHeader {String} Athorization  User's access token
- *
- * @apiSuccess (No Content 204)  Successfully deleted
- *
- * @apiError (Unauthorized 401) Unauthorized  Only authenticated users can delete the data
- * @apiError (Forbidden 403)    Forbidden     Only user with same id or admins can delete the data
- * @apiError (Not Found 404)    NotFound      User does not exist
- */
-// .delete(authorize(LOGGED_USER), controller.remove);
+  .patch(authorize([ADMIN_SUPER, ADMIN_OP, ADMIN_IMPORT]), controller.update)
+  /**
+   * @api {patch} v1/users/:id Delete User
+   * @apiDescription Delete a user
+   * @apiVersion 1.0.0
+   * @apiName DeleteUser
+   * @apiGroup User
+   * @apiPermission user
+   *
+   * @apiHeader {String} Athorization  User's access token
+   *
+   * @apiSuccess (No Content 204)  Successfully deleted
+   *
+   * @apiError (Unauthorized 401) Unauthorized  Only authenticated users can delete the data
+   * @apiError (Forbidden 403)    Forbidden     Only user with same id or admins can delete the data
+   * @apiError (Not Found 404)    NotFound      User does not exist
+   */
 
-router
-  .route('/:orderId/products')
-  .put(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.updateProductsOfOrder)
-//
-// router
-//   .route('/:orderId/orderproducts')
-//   .put(authorize([ADMIN_SUPER, ADMIN_IMPORT]), controller.updateProduct2)
+
+
 
 module.exports = router;

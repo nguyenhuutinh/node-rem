@@ -4,22 +4,21 @@ const mongoose = require('mongoose');
 const ObjectId = mongoose.Types.ObjectId;
 const httpStatus = require('http-status');
 const { omit } = require('lodash');
-import { ImportOrder, User, OrderProducts } from 'api/models';
+import { SupplierAccount, User } from 'api/models';
 import { startTimer, apiJson } from 'api/utils/Utils';
 const { handler: errorHandler } = require('../middlewares/error');
-
+const APIError = require('api/utils/APIError');
 /**
  * Load user and append to req.
  * @public
  */
 exports.load = async (req: Request, res: Response, next: NextFunction, id: any) => {
   try {
-    const order = await ImportOrder.get(id);
+    const order = await SupplierAccount.get(id);
     req.route.meta = req.route.meta || {};
     req.route.meta.order = order;
     return next();
   } catch (error) {
-    console.log(error)
     return errorHandler(error, req, res);
   }
 };
@@ -36,13 +35,25 @@ exports.get = (req: Request, res: Response) => res.json(req.route.meta.order.tra
  */
 exports.create = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    console.log("create order", req.body);
-    const order = await ImportOrder.createOrder(req.body);
-    const savedOrder = await order.save();
+    console.log(req.body)
+    const supplier = await SupplierAccount.createSupplier(req.body);
     res.status(httpStatus.CREATED);
-    res.json(savedOrder.transform());
+    res.json(supplier.transform());
   } catch (error) {
-    next(ImportOrder.checkDuplicateOrder(error));
+    console.log(error)
+    return new APIError({
+      message: 'Validation Error',
+      errors: [
+        {
+          field: 'something went wrong',
+          location: 'body',
+          messages: ['something went wrong']
+        }
+      ],
+      status: httpStatus.CONFLICT,
+      isPublic: true,
+      stack: error.stack
+    });
   }
 };
 
@@ -53,21 +64,21 @@ exports.create = async (req: Request, res: Response, next: NextFunction) => {
 exports.replace = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { order } = req.route.meta;
-    const newOrder = new ImportOrder(req.body);
+    const newOrder = new SupplierAccount(req.body);
     const ommitRole = order.role !== 'admin' ? 'role' : '';
     const newOrderObject = omit(newOrder.toObject(), '_id', ommitRole);
 
     await order.update(newOrderObject, { override: true, upsert: true });
-    const savedOrder = await ImportOrder.findById(order._id);
+    const savedOrder = await SupplierAccount.findById(order._id);
 
     res.json(savedOrder.transform());
   } catch (error) {
-    next(ImportOrder.checkDuplicateOrder(error));
+    return errorHandler(error, req, res);
   }
 };
 
 /**
- * Update existing order
+ * Update existing user
  * @public
  */
 exports.update = (req: Request, res: Response, next: NextFunction) => {
@@ -78,42 +89,8 @@ exports.update = (req: Request, res: Response, next: NextFunction) => {
   order
     .save()
     .then((savedOrder: any) => res.json(savedOrder.transform()))
-    .catch((e: any) => next(ImportOrder.checkDuplicateOrder(e)));
+    .catch((e: any) => errorHandler(e, req, res));
 };
-
-/**
- * Update existing products of order
- * @public
- */
-exports.updateProductsOfOrder = async (req: Request, res: Response, next: NextFunction) => {
-  console.error("updateProductsOfOrder ", req.body)
-  // const ommitRole = req.route.meta.user.role !== 'admin' ? 'role' : '';
-  // console.log(ommitRole)
-  // const updatedOrder = omit(req.body, ommitRole);
-  // const order = Object.assign(req.route.meta.order, updatedOrder);
-  const order  = await ImportOrder.updateProductsOfOrder(req.body)
-  order
-    .save()
-    .then((savedOrder: any) => res.json(savedOrder.transform()))
-    .catch((e: any) => next(ImportOrder.checkDuplicateOrder(e)));
-};
-
-/**
- * Update existing products of order
- * @public
- */
-// exports.updateProduct2 = async (req: Request, res: Response, next: NextFunction) => {
-//   console.log("updateProduct2 ", req.body)
-//   const ommitRole = req.route.meta.user.role !== 'admin' ? 'role' : '';
-//   // console.log(ommitRole)
-//   // const updatedOrder = omit(req.body, ommitRole);
-//   // const order = Object.assign(req.route.meta.order, updatedOrder);
-//   const order  = await ImportOrder.updateOrderProducts2(req.body)
-//   order
-//     .save()
-//     .then((savedOrder: any) => res.json(savedOrder.transform()))
-//     .catch((e: any) => next(ImportOrder.checkDuplicateOrder(e)));
-// };
 
 /**
  * Get user list
@@ -124,9 +101,9 @@ exports.list = async (req: Request, res: Response, next: NextFunction) => {
   try {
     startTimer(req);
 
-    const data = (await ImportOrder.list(req)).transform(req);
+    const data = (await SupplierAccount.list(req)).transform(req);
 
-    apiJson({ req, res, data, model: ImportOrder });
+    apiJson({ req, res, data, model: SupplierAccount });
   } catch (e) {
     next(e);
   }
@@ -139,8 +116,8 @@ exports.list = async (req: Request, res: Response, next: NextFunction) => {
  */
 exports.remove = (req: Request, res: Response, next: NextFunction) => {
 
-  const order  = ImportOrder.findById(req.body.id);
-  order
+  const suplier = SupplierAccount.findById(req.body.id);
+  suplier
     .remove()
     .then(() => res.status(httpStatus.NO_CONTENT).end())
     .catch((e: any) => next(e));
