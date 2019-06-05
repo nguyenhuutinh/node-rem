@@ -4,7 +4,7 @@ const mongoose = require('mongoose');
 
 const SUPPLIER_1 = {
   _id:new mongoose.Types.ObjectId,
-  name:'CONG TY TNHH THOUSANHANDS',
+  name:'CONG TY TNHH THOUSAND HANDS',
   phone: '1900636791',
   address: '416A Hai Ba Trung',
   type: 'store',
