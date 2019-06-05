@@ -19,6 +19,10 @@ const roles = [ 'store', 'supplier' ];
 const supplierSchema = new mongoose.Schema(
 	{
 		_id: mongoose.Schema.Types.ObjectId,
+		code: {
+			type: String,
+			maxlength: 128
+		},
 		name: {
 			type: String,
 			maxlength: 128,
@@ -26,10 +30,8 @@ const supplierSchema = new mongoose.Schema(
 			trim: true
 		},
 		phone: {
-			unique: true,
 			type: String,
 			maxlength: 15,
-			required: true,
 			trim: true
 		},
 		address: {
@@ -49,8 +51,6 @@ const supplierSchema = new mongoose.Schema(
 		},
 		email: {
 			type: String,
-			match: /^\S+@\S+\.\S+$/,
-			required: false,
 			trim: true,
 			lowercase: true
 		},
@@ -71,6 +71,7 @@ const supplierSchema = new mongoose.Schema(
 );
 const ALLOWED_FIELDS = [
 	'id',
+	'code',
 	'name',
 	'phone',
 	'ma_so_thue',
@@ -158,7 +159,7 @@ supplierSchema.statics = {
 		}
 		return error;
 	},
-	async createSupplier({ name, phone, address, ma_so_thue, type }: any) {
+	async createSupplier({ name, phone, address, ma_so_thue, type, sale_force, email, hotline_deli, cc_email }: any) {
 		console.log('createSupplier');
 		const supplier = await this.findOne({ name: { $eq: name } });
 		if (supplier) {
@@ -177,6 +178,18 @@ supplierSchema.statics = {
 			if (type) {
 				supplier.type = type;
 			}
+			if (sale_force) {
+				supplier.sale_force = sale_force;
+			}
+			if (email) {
+				supplier.email = email;
+			}
+			if (hotline_deli) {
+				supplier.hotline_deli = hotline_deli;
+			}
+			if (cc_email) {
+				supplier.cc_email = cc_email;
+			}
 			return supplier.save();
 		}
 
@@ -186,7 +199,11 @@ supplierSchema.statics = {
 			phone,
 			address,
 			ma_so_thue,
-			type
+			type,
+			sale_force,
+			email,
+			hotline_deli,
+			cc_email
 		});
 	}
 };

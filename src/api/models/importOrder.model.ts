@@ -21,6 +21,18 @@ const importOrderSchema = new mongoose.Schema({
 		type: String,
 		trim: true
 	},
+	order_name: {
+		type: String,
+		trim: true
+	},
+	order_email: {
+		type: String,
+		trim: true
+	},
+	order_phone: {
+		type: String,
+		trim: true
+	},
 	supplier: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },
 	owner: { type: mongoose.Schema.Types.ObjectId, ref: 'Supplier' },
 	delivery_address: {
@@ -53,6 +65,9 @@ const importOrderSchema = new mongoose.Schema({
 const ALLOWED_FIELDS = [
 	'id',
 	'order_code',
+	'order_name',
+	'order_email',
+	'order_phone',
 	'supplier',
 	'owner',
 	'delivery_address',
@@ -104,8 +119,19 @@ importOrderSchema.statics = {
 		try {
 			if (mongoose.Types.ObjectId.isValid(id)) {
 				const order = await this.findById(id)
-					.populate('supplier', [ 'id', 'name', 'phone', 'email' ])
-					.populate('owner', [ 'id', 'name', 'phone', 'email' ])
+					.populate('supplier', [
+						'id',
+						'name',
+						'phone',
+						'email',
+						'ma_so_thue',
+						'address',
+						'hotline_deli',
+						'sale_force',
+						'cc_email',
+						'type'
+					])
+					.populate('owner', [ 'id', 'code', 'name', 'phone', 'email' ])
 					.populate('productDetail', [ 'id', 'quantity', 'price', 'note', 'alias' ])
 					.exec();
 				return order;
@@ -226,6 +252,8 @@ importOrderSchema.statics = {
 	async createOrder({
 		id,
 		order_code,
+		order_name,
+		order_email,
 		owner_id,
 		supplier_id,
 		delivery_address,
@@ -280,6 +308,8 @@ importOrderSchema.statics = {
 		return this.create({
 			_id: new mongoose.Types.ObjectId(),
 			order_code,
+			order_name,
+			order_email,
 			supplier,
 			owner,
 			delivery_address,
@@ -295,7 +325,7 @@ importOrderSchema.statics = {
 		order_name,
 		customer_name,
 		customer_code,
-		cus_email,
+		order_email,
 		delivery_address,
 		delivery_time,
 		delivery_time_str,
@@ -305,13 +335,32 @@ importOrderSchema.statics = {
 		cc_email,
 		note
 	}: any) {
-		console.log('supplier_name', customer_name);
-		const _supplier = await SupplierAccount.findOne({ name: { $eq: customer_name } });
-		if (_supplier == null) {
+		console.log('order_name', order_name, order_email);
+		var owner = await SupplierAccount.findOne({ name: { $eq: customer_name } });
+		if (owner == null) {
 			throw new APIError({
 				message: 'customer does not exist',
 				status: httpStatus.NOT_FOUND
 			});
+		} else {
+			owner.code = customer_code;
+			owner = await owner.save();
+		}
+		var supplier = await SupplierAccount.findOne({ sale_force: { $eq: sale_force } });
+		if (supplier == null) {
+			supplier = await SupplierAccount.createSupplier({
+				name: '',
+				phone: '',
+				address: '',
+				ma_so_thue: '',
+				type: 'supplier',
+				sale_force: sale_force,
+				hotline_deli: hotline_deli,
+				email: email,
+				cc_email: cc_email,
+				note: note
+			});
+		} else {
 		}
 
 		// const product = await ImportProduct.findById(productIDs);
@@ -324,21 +373,30 @@ importOrderSchema.statics = {
 		// }
 		const order = await this.findOne({ order_code: { $eq: order_code } });
 		if (order) {
-			throw new APIError({
-				message: 'order code exist',
-				status: httpStatus.FORBIDDEN
-			});
-			if (!order.customer) {
-				order.customer = customer;
+			// throw new APIError({
+			// 	message: 'order code exist',
+			// 	status: httpStatus.FORBIDDEN
+			// });
+			if (!owner) {
+				order.owner = owner;
 			}
-			if (!order.delivery_address) {
+			if (!supplier) {
+				order.supplier = supplier;
+			}
+			if (!delivery_address) {
 				order.delivery_address = delivery_address;
 			}
-			if (!order.delivery_time) {
+			if (!delivery_time) {
 				order.delivery_time = delivery_time;
 			}
-			if (!order.note) {
+			if (!note) {
 				order.note = note;
+			}
+			if (!order_name) {
+				order.order_name = order_name;
+			}
+			if (!order_email) {
+				order.order_email = order_email;
 			}
 
 			// if (!order.productIds) {
@@ -346,13 +404,16 @@ importOrderSchema.statics = {
 			// }
 			return order.save();
 		}
-		let supplier = _supplier._id;
-		var customer = 1;
+
+		var owner_id = owner._id;
+		var supplier_id = supplier._id;
 		return this.create({
 			_id: new mongoose.Types.ObjectId(),
 			order_code,
-			supplier,
-			customer,
+			order_name,
+			order_email,
+			supplier: supplier_id,
+			owner: owner_id,
 			delivery_address,
 			delivery_time,
 			delivery_time_str,

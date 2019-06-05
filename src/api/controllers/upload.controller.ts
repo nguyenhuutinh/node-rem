@@ -15,7 +15,7 @@ exports.upload = async (req: any, res: Response, next: NextFunction) => {
 		var customer_code = worksheet['B3'].v;
 		var order_code = Math.floor(Math.random() * 10000) + 1;
 		var order_name = worksheet['B4'].v;
-		var cus_email = worksheet['B5'].v;
+		var order_email = worksheet['B5'].v;
 		var delivery_address = worksheet['B6'].v;
 		var delivery_time_str = worksheet['B7'].v;
 		var sale_force = worksheet['B8'].v;
@@ -53,9 +53,9 @@ exports.upload = async (req: any, res: Response, next: NextFunction) => {
 			id,
 			order_code,
 			order_name,
+			order_email,
 			customer_name,
 			customer_code,
-			cus_email,
 			delivery_address,
 			delivery_time,
 			delivery_time_str,

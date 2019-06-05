@@ -14,7 +14,7 @@ import { ImportOrder, ImportProduct } from 'api/models';
 const moment = require('moment-timezone');
 
 const OrderProductSchema = new mongoose.Schema({
-	_id: { type: mongoose.Schema.Types.ObjectId, unique: true },
+	_id: mongoose.Schema.Types.ObjectId,
 	product_id: { type: mongoose.Schema.Types.ObjectId, ref: 'ImportProduct' },
 	order_id: { type: mongoose.Schema.Types.ObjectId, ref: 'ImportOrder' },
 	quantity: {
@@ -49,18 +49,7 @@ var autoPopulateLead = function(next: any) {
 OrderProductSchema.pre('findOne', autoPopulateLead).pre('find', autoPopulateLead);
 
 OrderProductSchema.statics = {
-	async createOrderProduct({
-		_id,
-		product_id,
-		order_id,
-		alias,
-		quantity,
-		price,
-		ordered_name,
-		ordered_email,
-		ordered_phone,
-		note
-	}: any) {
+	async createOrderProduct({ _id, product_id, order_id, alias, quantity, price, note }: any) {
 		console.log('createOrderProduct', _id, product_id, order_id);
 		const order = await ImportOrder.findById(order_id);
 		if (order == null) {
@@ -89,15 +78,7 @@ OrderProductSchema.statics = {
 			if (product_id != undefined) {
 				prdorder.product_id = product_id;
 			}
-			if (ordered_name != undefined) {
-				prdorder.ordered_name = ordered_name;
-			}
-			if (ordered_email != undefined) {
-				prdorder.ordered_email = ordered_email;
-			}
-			if (ordered_phone != undefined) {
-				prdorder.ordered_phone = ordered_phone;
-			}
+
 			if (quantity != undefined) {
 				prdorder.quantity = quantity;
 			}
@@ -121,9 +102,7 @@ OrderProductSchema.statics = {
 			quantity,
 			price,
 			alias,
-			ordered_name,
-			ordered_email,
-			ordered_phone,
+
 			note
 		});
 	}
