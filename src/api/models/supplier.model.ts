@@ -173,7 +173,7 @@ supplierSchema.statics = {
 	}: any) {
 		const supplier = await this.findOne({ $or: [ { id: { $eq: id } }, { name: { $eq: name } } ] });
 		console.log('createSupplier', supplier);
-		if (supplier) {
+		if (supplier && name != '') {
 			if (name) {
 				supplier.name = name;
 			}

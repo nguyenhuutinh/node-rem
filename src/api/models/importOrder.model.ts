@@ -80,6 +80,8 @@ const ALLOWED_FIELDS = [
 ];
 
 var autoPopulateLead = function(next: any) {
+	this.populate('supplier');
+	this.populate('owner');
 	next();
 };
 importOrderSchema.pre('findOne', autoPopulateLead).pre('find', autoPopulateLead);
@@ -339,8 +341,9 @@ importOrderSchema.statics = {
 		cc_email,
 		note
 	}: any) {
-		console.log('order_name', order_name, order_email);
-		var owner = await SupplierAccount.findOne({ name: { $eq: customer_name } });
+		var owner = await SupplierAccount.findOne({
+			$and: [ { name: { $eq: customer_name } }, { type: { $eq: 'store' } } ]
+		});
 		if (owner == null) {
 			throw new APIError({
 				message: 'customer does not exist',
@@ -350,7 +353,10 @@ importOrderSchema.statics = {
 			owner.code = customer_code;
 			owner = await owner.save();
 		}
-		var supplier = await SupplierAccount.findOne({ sale_force: { $eq: sale_force } });
+		var supplier = await SupplierAccount.findOne({
+			$and: [ { sale_force: { $eq: sale_force } }, { type: { $eq: 'supplier' } } ]
+		});
+		console.log('customer_name', customer_name, sale_force, owner, supplier);
 		if (supplier == null) {
 			supplier = await SupplierAccount.createSupplier({
 				name: '',
