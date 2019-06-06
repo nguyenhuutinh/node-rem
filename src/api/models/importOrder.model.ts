@@ -79,6 +79,11 @@ const ALLOWED_FIELDS = [
 	'updated_at'
 ];
 
+var autoPopulateLead = function(next: any) {
+	this.populate('supplier').populate('owner');
+	next();
+};
+importOrderSchema.pre('findOne', autoPopulateLead).pre('find', autoPopulateLead);
 /**
  * Add your
  * - pre-save hooks
