@@ -80,7 +80,6 @@ const ALLOWED_FIELDS = [
 ];
 
 var autoPopulateLead = function(next: any) {
-	this.populate('supplier').populate('owner');
 	next();
 };
 importOrderSchema.pre('findOne', autoPopulateLead).pre('find', autoPopulateLead);
