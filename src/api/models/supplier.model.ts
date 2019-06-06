@@ -159,9 +159,20 @@ supplierSchema.statics = {
 		}
 		return error;
 	},
-	async createSupplier({ name, phone, address, ma_so_thue, type, sale_force, email, hotline_deli, cc_email }: any) {
-		console.log('createSupplier');
-		const supplier = await this.findOne({ name: { $eq: name } });
+	async createSupplier({
+		id,
+		name,
+		phone,
+		address,
+		ma_so_thue,
+		type,
+		sale_force,
+		email,
+		hotline_deli,
+		cc_email
+	}: any) {
+		const supplier = await this.findOne({ $or: [ { id: { $eq: id } }, { name: { $eq: name } } ] });
+		console.log('createSupplier', supplier);
 		if (supplier) {
 			if (name) {
 				supplier.name = name;
@@ -204,6 +215,49 @@ supplierSchema.statics = {
 			email,
 			hotline_deli,
 			cc_email
+		});
+	},
+	async updateSupplier({ suppliers }: any) {
+		for (var i = 0; i < suppliers.length; i++) {
+			var data = suppliers[i];
+			console.log('data', data);
+			const supplier = await this.findOne({ $or: [ { _id: { $eq: data.id } }, { name: { $eq: data.name } } ] });
+			if (supplier) {
+				console.log('supplier', supplier);
+				if (data.name) {
+					supplier.name = data.name;
+				}
+				if (data.phone) {
+					supplier.phone = data.phone;
+				}
+				if (data.address) {
+					supplier.address = data.address;
+				}
+				if (data.ma_so_thue) {
+					supplier.ma_so_thue = data.ma_so_thue;
+				}
+				if (data.type) {
+					supplier.type = data.type;
+				}
+				if (data.sale_force) {
+					supplier.sale_force = data.sale_force;
+				}
+				if (data.email) {
+					supplier.email = data.email;
+				}
+				if (data.hotline_deli) {
+					supplier.hotline_deli = data.hotline_deli;
+				}
+				if (data.cc_email) {
+					supplier.cc_email = data.cc_email;
+				}
+				await supplier.save();
+			}
+		}
+
+		throw new APIError({
+			message: 'supplier does not exist',
+			status: httpStatus.NOT_FOUND
 		});
 	}
 };
